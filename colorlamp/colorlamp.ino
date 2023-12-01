@@ -1,81 +1,83 @@
-const int redPin = D6;
-const int greenPin = C2;
-const int bluePin = C1;
-void setup() {
-  pinMode(redPin, OUTPUT);
-  pinMode(greenPin, OUTPUT);
-  pinMode(bluePin, OUTPUT);
+
+const int RED_PIN = C2;
+const int GREEN_PIN = C1;
+const int BLUE_PIN = D6;
+
+
+int DISPLAY_TIME = 50;  // Miliseconds
+
+void AnalogWrite(int pin, int value) {
+ int delayTime = map(value, 0, 255, 50000, 0); // Simulated analogwrite using pwm
+
+  int brightness = map(value, 0, 255, 0, 255);
+  digitalWrite(pin, HIGH);
+  delayMicroseconds(brightness);
+  digitalWrite(pin, LOW);
+  delayMicroseconds(255 - brightness);
+  
+  digitalWrite(pin, LOW);
+}
+void setup()
+{
+  pinMode(C4, OUTPUT);
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT);
 }
 
-void loop() {
-  for (int hue = 0; hue < 360; ++hue) {
-    int rgb[3];
-    calculateRGB(hue, 255, 255, rgb); // You can adjust saturation and value
 
-    simulatedAnalogWrite(redPin, rgb[0]);
-    simulatedAnalogWrite(greenPin, rgb[1]);
-    simulatedAnalogWrite(bluePin, rgb[2]);
-    delay(10); // Adjust the delay for the color transition speed
+void loop()
+{
+ 
+
+  showSpectrum();
+}
+
+
+void showSpectrum()
+{
+  int x;  
+ 
+  for (x = 0; x < 768; x++)
+
+  {
+    showRGB(x);   
+    delay(10);   
   }
 }
 
-// Function to calculate RGB values from HSV
-void calculateRGB(int hue, int saturation, int value, int rgb[]) {
-  float chroma = (float)value * ((float)saturation / 255.0);
-  float h = hue / 60.0;
-  float x = chroma * (1 - abs((int)h % 2 - 1));
+void showRGB(int color)
+{
+  int redIntensity;
+  int greenIntensity;
+  int blueIntensity;
 
-  float r, g, b;
-
-  if (0 <= h && h < 1) {
-    r = chroma;
-    g = x;
-    b = 0;
-  } else if (1 <= h && h < 2) {
-    r = x;
-    g = chroma;
-    b = 0;
-  } else if (2 <= h && h < 3) {
-    r = 0;
-    g = chroma;
-    b = x;
-  } else if (3 <= h && h < 4) {
-    r = 0;
-    g = x;
-    b = chroma;
-  } else if (4 <= h && h < 5) {
-    r = x;
-    g = 0;
-    b = chroma;
-  } else {
-    r = chroma;
-    g = 0;
-    b = x;
+  if (color <= 255)
+  {
+    redIntensity = 255 - color;
+    greenIntensity = color;
+    blueIntensity = 0;
+  }
+  else if (color <= 511)
+  {
+    redIntensity = 0;
+    greenIntensity = 255 - (color - 256);
+    blueIntensity = (color - 256);
+  }
+  else // color >= 512
+  {
+    redIntensity = (color - 512);
+    greenIntensity = 0;
+    blueIntensity = 255 - (color - 512);
   }
 
-  float m = (float)value - chroma;
 
-  rgb[0] = (int)(255.0 * (r + m));
-  rgb[1] = (int)(255.0 * (g + m));
-  rgb[2] = (int)(255.0 * (b + m));
-}
+  redIntensity = redIntensity * 16;
+  greenIntensity = greenIntensity * 16;
+  blueIntensity = blueIntensity * 16;
+  AnalogWrite(C4, greenIntensity);
 
-// Simulated analogWrite function using digitalWrite
-void simulatedAnalogWrite(int pin, int value) {
-  int threshold = map(value, 0, 255, 0, 100);
-
-  for (int i = 0; i <= 100; ++i) {
-    int brightness = map(i, 0, 100, 0, 255);
-
-    if (i < threshold) {
-      digitalWrite(pin, LOW);  // Simulate turning on the LED
-      delayMicroseconds(brightness);
-    } else {
-      digitalWrite(pin, LOW);  // Simulate turning on the LED
-      delayMicroseconds(255 - brightness);
-    }
-
-    digitalWrite(pin, HIGH);  // Simulate turning off the LED
-    delayMicroseconds(5000); // Adjust this delay for the off state
-  }
+  AnalogWrite(RED_PIN, redIntensity);
+  AnalogWrite(BLUE_PIN, blueIntensity);
+  AnalogWrite(GREEN_PIN, greenIntensity);
 }
